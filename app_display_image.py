@@ -12,6 +12,7 @@ __author__ = 'Imbalance'
 
 # app = Flask(__name__)
 app = Flask(__name__, static_folder="static")
+app.config.from_object(os.environ['APP_SETTINGS'])
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 APP_STATIC = os.path.join(APP_ROOT, 'static/')
