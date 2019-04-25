@@ -3,7 +3,7 @@
 <head>
 <title>Upload</title>
 <!-- <link rel="stylesheet" href="{{ url_for('static', filename='styles.css?q=1280549780') }}"> -->
- <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script> -->
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
  <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> -->
  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script> -->
  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
@@ -37,12 +37,12 @@
             <img id="result" src=""/>
         </div>
     </div> -->
-<div class="container text-center center-screen" >
+<div class="container text-center" >
     <h2>Rice Detection</h2>
     <p class="lead">Please Upload <b>Your Image</b></p>
 
     <!-- Upload  -->
-    <form id="file-upload-form" class="uploader">
+    <form id="file-upload-form" class="uploader" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
         <input id="file-upload" type="file" name="file" accept="image/*"/>
         <label for="file-upload" id="file-drag">
             <div id="start">
@@ -50,64 +50,56 @@
                 <div>Select a image file</div>
                 <div id="notimage" class="hidden">Please select an image</div>
             </div>
-            <img id="file-image" src="#" alt="Preview" class="hidden">
-            <span id="file-upload-btn" class="btn btn-primary">Select a file</span>
         </label>
+        <div>
+            <img id="file-image" src="#" alt="Preview" class="hidden">
+        </div>
+        <input id="info" name="info" class="hide" type="text">
+        <span id="file-upload-btn" class="btn btn-primary">Select a file</span>
+        <input id="upload-button" type="submit" class="btn btn-primary" value="Upload Image">
+        <span id="rotate-right" class="btn btn-primary">Rotate Right</span>
     </form>
+    <button id="use">test</button>
+</div>
 </body>
 <script>
-    function srcToFile(src, fileName, mimeType){
-        return (fetch(src)
-            .then(function(res){return res.arrayBuffer();})
-            .then(function(buf){return new File([buf], fileName,{type:mimeType});})
-        );
-    }
+    var crop;
+    $("#file-upload-btn").click(function(e) {
+        $("#file-upload").click();
+        e.preventDefault();
+    });
 
+    $('#upload-button').hide();
+    $('#rotate-right').hide();
+    
     function readURL(input) {
     if (input.files && input.files[0]) {
         var reader = new FileReader();
         reader.onload = function(e) {
         $('#file-image').attr('src', e.target.result);
-        let crop = new Croppie($('#file-image')[0], {
-            viewport: { width: 403.2, height: 302.4 },
-            boundary: { width: 603.2, height: 502.4 },
+        let vp = [403.2,302.4]
+            crop = new Croppie($('#file-image')[0], {
+            viewport: { width: vp[0], height: vp[1]},
+            boundary: { width: vp[0]+200, height: vp[1]+200 },
             showZoomer: true,
-            enableOrientation: true
+            enableOrientation: true,
+            enableResize: true,
         });
-        $('#use').fadeIn();
-        $('#use').on('click', function() {
-            crop.result('html').then(function(dataImg) {
-                width = dataImg.style.width.slice(0,-2)
-                height = dataImg.style.height.slice(0,-2)
-                tops = dataImg.getElementsByTagName("img")[0].style.top.slice(0,-2)
-                left = dataImg.getElementsByTagName("img")[0].style.left.slice(0,-2)
-                console.log(width,height,tops,left)
-            // srcToFile(input.files[0], input.files[0].name, input.files[0].type)            
-            // .then(function(file){
-            //     var fd = new FormData();
-            //     fd.append('file1', file);
-            //     console.log(file)
-            //     return $.ajax({
-            //                 url: '/upload',
-            //                 data: $('upload-form').serialize(),
-            //                 type: 'POST',
-            //                 success: function(response) {
-            //                     console.log(response);
-            //                 },
-            //                 error: function(error) {
-            //                     console.log(error);
-            //                 }
-            //             });
-                // return fetch('/upload.php', {method:'POST', body:fd});
-            // })
-            // .then(function(res){
-            //     return res.text();
-            // })
-            // .then(console.log)
-            // .catch(console.error)
-            // var info = crop.croppie('get');
-            // comsole.log('Point', info)
-            })
+        $('#upload-button').show();
+        $('#rotate-right').show();
+        $('#upload-button').on('click', function() {
+            var points = crop.get().points
+            var rotate = crop.get().orientation
+            if (rotate == 8){
+                rotate = 90
+            }else if(rotate == 3){
+                rotate = 180
+            }else if(rotate == 6){
+                rotate = 270
+            }else{
+                rotate = 0
+            }
+            $("#info").val(points+','+rotate)
         })
         $('#rotate-right').on('click', function() {
             crop.rotate(90);
@@ -117,7 +109,16 @@
     }
     }
 
-    $("#file-upload").change(function() {
+    $("#file-upload").change(async function(e) {
+        e.preventDefault();
+        $("#file-drag").hide();
+        console.log(this.value.length != 0, crop != undefined)
+        if (crop != undefined) {
+            if (this.value.length != 0) {
+                await crop.destroy()
+                await console.log(crop)
+            }
+        }
         readURL(this);
     });
 

@@ -10,6 +10,7 @@ html, body {
   text-align: center;
 }
 body {
+	padding: 2rem;
 	background: #f8f8f8;
 }
 h2 {
@@ -162,6 +163,9 @@ p {
 	display: none;
 }
 
+#info{
+	display: none;
+}
 /* #use {
 	display: block;
 } */
